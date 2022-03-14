@@ -44,7 +44,7 @@ public class OperacaoServiceImpl implements OperacaoService {
             throw new ContaNotFoundException();
         }
 
-        if(operacaoDto.getValorTransacao().doubleValue() <= 0){
+        if (operacaoDto.getValorTransacao().doubleValue() <= 0) {
             throw new ClienteNegativoOrZeroException();
         }
 
@@ -73,6 +73,9 @@ public class OperacaoServiceImpl implements OperacaoService {
         if (!contaRepository.existsBynumeroDaConta(operacaoDto.getNumeroConta())) {
             throw new ContaNotFoundException();
         }
+        if (operacaoDto.getValorTransacao().doubleValue() <= 0) {
+            throw new ClienteNegativoOrZeroException();
+        }
 
         Operacao operacao = mapperOperacao.toModel(operacaoDto);
 
@@ -81,16 +84,17 @@ public class OperacaoServiceImpl implements OperacaoService {
         double valorDoSaque = operacaoDto.getValorTransacao().doubleValue();
         double valorDoSaldo = conta.getSaldo().doubleValue();
 
-        if (conta.getSaldo().compareTo(BigDecimal.valueOf(valorDoSaldo)) <
-                operacaoDto.getSaldo().compareTo(BigDecimal.valueOf(valorDoSaque))) {
+        if (conta.getSaldo().doubleValue() < operacaoDto.getValorTransacao().doubleValue()) {
             throw new ClienteSaldoException();
         }
 
         conta.setSaldo(BigDecimal.valueOf(valorDoSaldo).subtract(BigDecimal.valueOf(valorDoSaque)));
-        contaRepository.save(conta);
-
         operacao.setTipoDeOperacao(OperacaoEnum.SAQUE);
+
+        contaRepository.save(conta);
         OperacaoDto operacaoDtoRetorno = mapperOperacao.toDto(operacao);
+
+        repository.save(operacao);
 
         return operacaoDtoRetorno;
     }
@@ -102,22 +106,31 @@ public class OperacaoServiceImpl implements OperacaoService {
         } else if (!contaRepository.existsBynumeroDaConta(operacaoDto.getContaDestino())) {
             throw new ContaNotFoundException();
         }
+        if (operacaoDto.getValorTransacao().doubleValue() <= 0) {
+            throw new ClienteNegativoOrZeroException();
+        }
 
         Operacao operacao = mapperOperacao.toModel(operacaoDto);
 
-        Conta conta = contaRepository.findBynumeroDaConta(operacao.getNumeroConta());
+        Conta contaTransferencia = contaRepository.findBynumeroDaConta(operacao.getNumeroConta());
+        Conta contaTransferida = contaRepository.findBynumeroDaConta(operacao.getContaDestino());
 
-        double valorSaldo = conta.getSaldo().doubleValue();
+        double valorSaldoContaTransferencia = contaTransferencia.getSaldo().doubleValue();
+        double valorSaldocontaTransferida = contaTransferida.getSaldo().doubleValue();
         double valorDepositado = operacao.getValorTransacao().doubleValue();
-        double novoSaldo = valorSaldo + valorDepositado;
 
-        conta.setSaldo(BigDecimal.valueOf(novoSaldo));
-        operacao.setSaldo(BigDecimal.valueOf(novoSaldo));
+        if (contaTransferencia.getSaldo().doubleValue() < operacaoDto.getValorTransacao().doubleValue()) {
+            throw new ClienteSaldoException();
+        }
 
-        contaRepository.save(conta);
+        contaTransferencia.setSaldo(BigDecimal.valueOf(valorSaldoContaTransferencia).subtract(BigDecimal.valueOf(valorDepositado)));
+        contaTransferida.setSaldo(BigDecimal.valueOf(valorSaldocontaTransferida).add(BigDecimal.valueOf(valorDepositado)));
+        operacao.setSaldo(BigDecimal.valueOf(valorDepositado));
+
+        contaRepository.save(contaTransferencia);
+        contaRepository.save(contaTransferida);
 
         operacao.setTipoDeOperacao(OperacaoEnum.TRANSFERENCIA);
-
         OperacaoDto operacaoDtoRetorno = mapperOperacao.toDto(operacao);
 
         repository.save(operacao);

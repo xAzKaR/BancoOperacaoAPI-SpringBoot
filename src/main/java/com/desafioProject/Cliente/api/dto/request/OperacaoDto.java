@@ -30,7 +30,6 @@ public class OperacaoDto {
 
     private String contaDestino;
 
-//    @Positive(message = "Valor não pode ser negativo!")
     private BigDecimal valorTransacao;
 
     private BigDecimal taxaDeTransferencia;
