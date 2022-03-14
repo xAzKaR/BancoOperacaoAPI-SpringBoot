@@ -2,6 +2,7 @@ package com.desafioProject.Cliente.api.controller;
 
 import com.desafioProject.Cliente.api.dto.request.ContaDto;
 
+import com.desafioProject.Cliente.api.dto.response.ContaResponse;
 import com.desafioProject.Cliente.model.entity.Conta;
 import com.desafioProject.Cliente.model.repository.ContaRepository;
 import com.desafioProject.Cliente.model.service.ContaService;
@@ -12,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -24,9 +26,9 @@ public class ContaController {
     private final ContaRepository contaRepository;
 
     @PostMapping
-    public ResponseEntity<ContaDto> salvar(@RequestBody ContaDto contaDto) {
-        contaService.salvar(contaDto);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<ContaResponse> salvar(@RequestBody @Valid ContaDto contaDto) {
+        ContaResponse contaCriada = contaService.salvar(contaDto);
+        return ResponseEntity.created(null).body(contaCriada);
     }
 
     @GetMapping("/{id}")

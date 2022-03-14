@@ -1,6 +1,9 @@
 package com.desafioProject.Cliente.api.controller;
 
 import com.desafioProject.Cliente.api.dto.request.OperacaoDto;
+import com.desafioProject.Cliente.api.dto.response.OperacaoDepositoResponse;
+import com.desafioProject.Cliente.api.dto.response.OperacaoSaqueResponse;
+import com.desafioProject.Cliente.api.dto.response.OperacaoTransfResponse;
 import com.desafioProject.Cliente.model.entity.Operacao;
 import com.desafioProject.Cliente.model.repository.OperacaoRepository;
 import com.desafioProject.Cliente.model.service.OperacaoService;
@@ -24,21 +27,21 @@ public class OperacaoController {
     private final OperacaoRepository operacaoRepository;
 
     @PostMapping("/depositar")
-    public ResponseEntity<OperacaoDto> depositar(@RequestBody @Valid OperacaoDto operacaoDto) {
-        operacaoService.depositar(operacaoDto);
-        return ResponseEntity.created(null).build();
+    public ResponseEntity<OperacaoDepositoResponse> depositar(@RequestBody @Valid OperacaoDto operacaoDto) {
+        OperacaoDepositoResponse depositar = operacaoService.depositar(operacaoDto);
+        return ResponseEntity.created(null).body(depositar);
     }
 
     @PostMapping("/sacar")
-    public ResponseEntity<OperacaoDto> sacar(@RequestBody @Valid OperacaoDto operacaoDto) {
-        operacaoService.sacar(operacaoDto);
-        return ResponseEntity.created(null).build();
+    public ResponseEntity<OperacaoSaqueResponse> sacar(@RequestBody @Valid OperacaoDto operacaoDto) {
+        OperacaoSaqueResponse sacar = operacaoService.sacar(operacaoDto);
+        return ResponseEntity.created(null).body(sacar);
     }
 
     @PostMapping("/transferir")
-    public ResponseEntity<OperacaoDto> transferir(@RequestBody @Valid OperacaoDto operacaoDto) {
-        operacaoService.transferir(operacaoDto);
-        return ResponseEntity.created(null).build();
+    public ResponseEntity<OperacaoTransfResponse> transferir(@RequestBody @Valid OperacaoDto operacaoDto) {
+        OperacaoTransfResponse transferir = operacaoService.transferir(operacaoDto);
+        return ResponseEntity.created(null).body(transferir);
     }
 
     @GetMapping("/{id}")

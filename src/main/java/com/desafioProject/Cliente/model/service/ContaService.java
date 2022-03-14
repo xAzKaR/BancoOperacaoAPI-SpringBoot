@@ -1,12 +1,13 @@
 package com.desafioProject.Cliente.model.service;
 import com.desafioProject.Cliente.api.dto.request.ContaDto;
+import com.desafioProject.Cliente.api.dto.response.ContaResponse;
 import org.springframework.http.ResponseEntity;
 
 import java.util.List;
 
 public interface ContaService {
 
-    ContaDto salvar(ContaDto contaDto);
+    ContaResponse salvar(ContaDto contaDto);
 
     void deletar(Long id);
 

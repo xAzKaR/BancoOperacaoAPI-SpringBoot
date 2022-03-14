@@ -1,6 +1,7 @@
 package com.desafioProject.Cliente.model.service.implement;
 
 import com.desafioProject.Cliente.api.dto.request.ClienteDto;
+import com.desafioProject.Cliente.api.dto.response.ClienteResponse;
 import com.desafioProject.Cliente.api.exception.*;
 import com.desafioProject.Cliente.api.mappers.MapperCliente;
 import com.desafioProject.Cliente.model.entity.Cliente;
@@ -23,7 +24,7 @@ public class ClienteServiceImpl implements ClienteService {
     private final MapperCliente mapperCliente;
 
     @Override
-    public ClienteDto salvar(ClienteDto clienteDto){
+    public ClienteResponse salvar(ClienteDto clienteDto){
         if(repository.existsBycpf(clienteDto.getCpf())){
             throw new ClienteExistsException();
         }
@@ -34,8 +35,8 @@ public class ClienteServiceImpl implements ClienteService {
             throw new ClienteDocumentoNotBeNullException();
         }
         Cliente cliente = mapperCliente.toModel(clienteDto);
-        ClienteDto clienteDtoRetorno = mapperCliente.toDto(cliente);
         repository.save(cliente);
+        ClienteResponse clienteDtoRetorno = mapperCliente.toResponse(cliente);
         return clienteDtoRetorno;
     }
 

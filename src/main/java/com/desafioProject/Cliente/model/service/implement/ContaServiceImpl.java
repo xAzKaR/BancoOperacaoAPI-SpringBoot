@@ -1,6 +1,7 @@
 package com.desafioProject.Cliente.model.service.implement;
 
 import com.desafioProject.Cliente.api.dto.request.ContaDto;
+import com.desafioProject.Cliente.api.dto.response.ContaResponse;
 import com.desafioProject.Cliente.api.exception.ContaExistsException;
 import com.desafioProject.Cliente.api.exception.ContaNotFoundException;
 import com.desafioProject.Cliente.api.mappers.MapperConta;
@@ -27,16 +28,15 @@ public class ContaServiceImpl implements ContaService {
 
 
     @Override
-    public ContaDto salvar(ContaDto contaDto) {
+    public ContaResponse salvar(ContaDto contaDto) {
         if(repository.existsBynumeroDaConta(contaDto.getNumeroDaConta())){
             throw new ContaExistsException();
         }
-
         Conta conta = mapperConta.toModel(contaDto);
-        ContaDto contaDtoRetorno = mapperConta.toDto(conta);
-
         repository.save(conta);
-        return contaDtoRetorno;
+
+        ContaResponse contaResponseRetorno = mapperConta.toResponse(conta);
+        return contaResponseRetorno;
     }
 
     @Override

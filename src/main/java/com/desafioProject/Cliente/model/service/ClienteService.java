@@ -1,12 +1,13 @@
 package com.desafioProject.Cliente.model.service;
 
 import com.desafioProject.Cliente.api.dto.request.ClienteDto;
+import com.desafioProject.Cliente.api.dto.response.ClienteResponse;
 
 import java.util.List;
 
 public interface ClienteService {
 
-    ClienteDto salvar(ClienteDto clienteDto);
+    ClienteResponse salvar(ClienteDto clienteDto);
 
     void deleteById(Long id);
 

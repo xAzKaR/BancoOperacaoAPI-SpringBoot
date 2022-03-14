@@ -1,6 +1,9 @@
 package com.desafioProject.Cliente.model.service.implement;
 
 import com.desafioProject.Cliente.api.dto.request.OperacaoDto;
+import com.desafioProject.Cliente.api.dto.response.OperacaoDepositoResponse;
+import com.desafioProject.Cliente.api.dto.response.OperacaoSaqueResponse;
+import com.desafioProject.Cliente.api.dto.response.OperacaoTransfResponse;
 import com.desafioProject.Cliente.api.exception.ClienteNegativoOrZeroException;
 import com.desafioProject.Cliente.api.exception.ClienteSaldoException;
 import com.desafioProject.Cliente.api.exception.ContaNotFoundException;
@@ -10,6 +13,7 @@ import com.desafioProject.Cliente.api.mappers.MapperOperacao;
 import com.desafioProject.Cliente.model.entity.Conta;
 import com.desafioProject.Cliente.model.entity.Operacao;
 import com.desafioProject.Cliente.model.entity.enums.OperacaoEnum;
+import com.desafioProject.Cliente.model.entity.enums.TipoDeConta;
 import com.desafioProject.Cliente.model.repository.ContaRepository;
 import com.desafioProject.Cliente.model.repository.OperacaoRepository;
 import com.desafioProject.Cliente.model.service.OperacaoService;
@@ -39,7 +43,7 @@ public class OperacaoServiceImpl implements OperacaoService {
 
     @Override
     @Transactional
-    public OperacaoDto depositar(OperacaoDto operacaoDto) {
+    public OperacaoDepositoResponse depositar(OperacaoDto operacaoDto) {
         if (!contaRepository.existsBynumeroDaConta(operacaoDto.getNumeroConta())) {
             throw new ContaNotFoundException();
         }
@@ -61,15 +65,15 @@ public class OperacaoServiceImpl implements OperacaoService {
         contaRepository.save(conta);
 
         operacao.setTipoDeOperacao(OperacaoEnum.DEPOSITO);
-        OperacaoDto operacaoDtoRetorno = mapperOperacao.toDto(operacao);
-
         repository.save(operacao);
 
-        return operacaoDtoRetorno;
+        OperacaoDepositoResponse operacaoDepositoResponse = mapperOperacao.toResponse(operacao);
+
+        return operacaoDepositoResponse;
     }
 
     @Override
-    public OperacaoDto sacar(OperacaoDto operacaoDto) {
+    public OperacaoSaqueResponse sacar(OperacaoDto operacaoDto) {
         if (!contaRepository.existsBynumeroDaConta(operacaoDto.getNumeroConta())) {
             throw new ContaNotFoundException();
         }
@@ -83,6 +87,7 @@ public class OperacaoServiceImpl implements OperacaoService {
 
         double valorDoSaque = operacaoDto.getValorTransacao().doubleValue();
         double valorDoSaldo = conta.getSaldo().doubleValue();
+        operacao.setSaldo(BigDecimal.valueOf(valorDoSaldo));
 
         if (conta.getSaldo().doubleValue() < operacaoDto.getValorTransacao().doubleValue()) {
             throw new ClienteSaldoException();
@@ -92,15 +97,22 @@ public class OperacaoServiceImpl implements OperacaoService {
         operacao.setTipoDeOperacao(OperacaoEnum.SAQUE);
 
         contaRepository.save(conta);
-        OperacaoDto operacaoDtoRetorno = mapperOperacao.toDto(operacao);
 
         repository.save(operacao);
 
-        return operacaoDtoRetorno;
+        TipoDeConta tipoDeConta = conta.getTipo();
+        tipoDeConta.getTaxa();
+
+        OperacaoSaqueResponse operacaoSaqueResponse = mapperOperacao.toSaqueResponse(operacao);
+
+        operacaoSaqueResponse.setMensagem("Saque efetuado com sucesso, você possui mais " + tipoDeConta.getQuantidadeDeSaque() + " saques disponíveis " +
+                "após, será cobrado R$: " + tipoDeConta.getTaxa());
+
+        return operacaoSaqueResponse;
     }
 
     @Override
-    public OperacaoDto transferir(OperacaoDto operacaoDto) {
+    public OperacaoTransfResponse transferir(OperacaoDto operacaoDto) {
         if (!contaRepository.existsBynumeroDaConta(operacaoDto.getNumeroConta())) {
             throw new ContaNotFoundException();
         } else if (!contaRepository.existsBynumeroDaConta(operacaoDto.getContaDestino())) {
@@ -131,11 +143,11 @@ public class OperacaoServiceImpl implements OperacaoService {
         contaRepository.save(contaTransferida);
 
         operacao.setTipoDeOperacao(OperacaoEnum.TRANSFERENCIA);
-        OperacaoDto operacaoDtoRetorno = mapperOperacao.toDto(operacao);
 
         repository.save(operacao);
 
-        return operacaoDtoRetorno;
+        OperacaoTransfResponse operacaoTransfRetorno = mapperOperacao.toTransfResponse(operacao);
+        return operacaoTransfRetorno;
     }
 
     @Override

@@ -1,6 +1,7 @@
 package com.desafioProject.Cliente.api.controller;
 
 import com.desafioProject.Cliente.api.dto.request.ClienteDto;
+import com.desafioProject.Cliente.api.dto.response.ClienteResponse;
 import com.desafioProject.Cliente.model.entity.Cliente;
 import com.desafioProject.Cliente.model.repository.ClienteRepository;
 import com.desafioProject.Cliente.model.service.ClienteService;
@@ -22,8 +23,8 @@ public class ClienteController {
     private final ClienteRepository clienteRepository;
 
     @PostMapping
-    public ResponseEntity<ClienteDto> salvar(@RequestBody @Valid ClienteDto clienteDto) {
-        ClienteDto cliente =  clienteService.salvar(clienteDto);
+    public ResponseEntity<ClienteResponse> salvar(@RequestBody @Valid ClienteDto clienteDto) {
+        ClienteResponse cliente =  clienteService.salvar(clienteDto);
         return ResponseEntity.created(null).body(cliente);
     }
 

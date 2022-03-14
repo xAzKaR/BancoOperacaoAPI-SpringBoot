@@ -36,8 +36,6 @@ public class ContaDto {
     @NotBlank(message = "Campo não pode ser vazio")
     private String agencia;
 
-    @NotNull(message = "Campo não pode ser nulo!")
-    @NotBlank(message = "Campo não pode ser vazio")
     @Enumerated(EnumType.STRING)
     private TipoDeConta tipo;
 
