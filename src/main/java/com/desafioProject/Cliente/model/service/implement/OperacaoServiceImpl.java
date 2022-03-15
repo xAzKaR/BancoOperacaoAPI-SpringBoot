@@ -62,9 +62,10 @@ public class OperacaoServiceImpl implements OperacaoService {
 
         conta.setSaldo(BigDecimal.valueOf(novoSaldo));
         operacao.setSaldo(BigDecimal.valueOf(novoSaldo));
+        operacao.setTipoDeOperacao(OperacaoEnum.DEPOSITO);
+
         contaRepository.save(conta);
 
-        operacao.setTipoDeOperacao(OperacaoEnum.DEPOSITO);
         repository.save(operacao);
 
         OperacaoDepositoResponse operacaoDepositoResponse = mapperOperacao.toResponse(operacao);
@@ -87,26 +88,47 @@ public class OperacaoServiceImpl implements OperacaoService {
 
         double valorDoSaque = operacaoDto.getValorTransacao().doubleValue();
         double valorDoSaldo = conta.getSaldo().doubleValue();
-        operacao.setSaldo(BigDecimal.valueOf(valorDoSaldo));
 
         if (conta.getSaldo().doubleValue() < operacaoDto.getValorTransacao().doubleValue()) {
             throw new ClienteSaldoException();
         }
+//        conta.setSaldo(BigDecimal.valueOf(valorDoSaldo).subtract(BigDecimal.valueOf(valorDoSaque)));
 
-        conta.setSaldo(BigDecimal.valueOf(valorDoSaldo).subtract(BigDecimal.valueOf(valorDoSaque)));
+        TipoDeConta tipoDeConta = conta.getTipo();
+
         operacao.setTipoDeOperacao(OperacaoEnum.SAQUE);
+//        operacao.setSaldo(BigDecimal.valueOf(valorDoSaldo));
+
+        long quantidadeDeSaque = conta.getSaqueSemTaxa();
+
+        BigDecimal saque1 = BigDecimal.valueOf(valorDoSaldo).subtract(BigDecimal.valueOf(valorDoSaque));
+        BigDecimal saque2 = BigDecimal.valueOf(valorDoSaldo).subtract(BigDecimal.valueOf(valorDoSaque).add(conta.getTaxa()));
+
+        OperacaoSaqueResponse operacaoSaqueResponse = mapperOperacao.toSaqueResponse(operacao);
+        if (quantidadeDeSaque > 0) {
+            quantidadeDeSaque--;
+
+            conta.setSaldo(saque1);
+
+            operacao.setSaldo(BigDecimal.valueOf(conta.getSaldo().doubleValue()));
+            conta.setSaqueSemTaxa(Math.toIntExact(quantidadeDeSaque));
+
+            operacaoSaqueResponse.setMensagem("Saque efetuado com sucesso, você possui mais " + conta.getSaqueSemTaxa() + " saques disponíveis " +
+                    "após, será cobrado R$: " + tipoDeConta.getTaxa() + ",00");
+        } else if (conta.getSaldo().doubleValue() > (conta.getTaxa().doubleValue() + operacaoDto.getValorTransacao().doubleValue())) {
+
+//            conta.setSaldo(saque1.subtract(BigDecimal.valueOf(taxa.doubleValue())));
+
+            conta.setSaldo(saque2);
+            operacao.setSaldo(BigDecimal.valueOf(conta.getSaldo().doubleValue()));
+
+            operacaoSaqueResponse.setMensagem("Saque com taxa efetuado com sucesso, será adicionado um valor  de R$: "
+                    + tipoDeConta.getTaxa() + ",00 verifique com seu gerente um novo plano");
+        }
 
         contaRepository.save(conta);
 
         repository.save(operacao);
-
-        TipoDeConta tipoDeConta = conta.getTipo();
-        tipoDeConta.getTaxa();
-
-        OperacaoSaqueResponse operacaoSaqueResponse = mapperOperacao.toSaqueResponse(operacao);
-
-        operacaoSaqueResponse.setMensagem("Saque efetuado com sucesso, você possui mais " + tipoDeConta.getQuantidadeDeSaque() + " saques disponíveis " +
-                "após, será cobrado R$: " + tipoDeConta.getTaxa());
 
         return operacaoSaqueResponse;
     }

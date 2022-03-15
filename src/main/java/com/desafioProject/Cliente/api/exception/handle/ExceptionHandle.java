@@ -6,15 +6,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
-import java.time.LocalDateTime;
-
 @ControllerAdvice
 public class ExceptionHandle {
     @ExceptionHandler(ClienteNotFoundException.class)
     public ResponseEntity<DefaultException> handle(ClienteNotFoundException e){
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("Cliente não foi encontrado");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.NOT_FOUND.value());
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }
@@ -24,53 +21,39 @@ public class ExceptionHandle {
 
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("Operação não foi encontrada");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.NOT_FOUND.value());
-
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }
 
     @ExceptionHandler(ClienteExistsException.class)
     public ResponseEntity<DefaultException> handle(ClienteExistsException e){
-
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("Cliente já cadastrado no nosso sistema.");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.BAD_REQUEST.value());
-
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }
 
     @ExceptionHandler(ContaExistsException.class)
     public ResponseEntity<DefaultException> handle(ContaExistsException e){
-
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("Cliente com esse documento já existe!");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.BAD_REQUEST.value());
-
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }
 
     @ExceptionHandler(ClienteSaldoException.class)
     public ResponseEntity<DefaultException> handle(ClienteSaldoException e){
-
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("Conta sem saldo disponível para saque!");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.BAD_REQUEST.value());
-
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }
 
     @ExceptionHandler(ClienteNotBeNullException.class)
     public ResponseEntity<DefaultException> handle(ClienteNotBeNullException e){
-
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("Cliente não pode ser nulo!");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.BAD_REQUEST.value());
-
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }
 
@@ -78,7 +61,6 @@ public class ExceptionHandle {
     public ResponseEntity<DefaultException> handle(ClienteExistsByCnpjException e){
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("Cliente com esse CNPJ já cadastrado");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }
@@ -87,7 +69,6 @@ public class ExceptionHandle {
     public ResponseEntity<DefaultException> handle(ClienteCpfInvalidoException e){
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("CPF Inválido!");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }
@@ -96,7 +77,6 @@ public class ExceptionHandle {
     public ResponseEntity<DefaultException> handle(ClienteCnpjInvalidoException e){
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("CNPJ Inválido!");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }
@@ -105,7 +85,6 @@ public class ExceptionHandle {
     public ResponseEntity<DefaultException> handle(ClienteDocumentoNotBeNullException e){
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("Cliente deve possuir ao menos um documento no nosso sistema!");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }
@@ -114,7 +93,6 @@ public class ExceptionHandle {
     public ResponseEntity<DefaultException> handle(ContaNotFoundException e){
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("Conta não existe!");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }
@@ -123,7 +101,6 @@ public class ExceptionHandle {
     public ResponseEntity<DefaultException> handle(ClienteNegativoOrZeroException e){
         DefaultException defaultException = new DefaultException();
         defaultException.setMensagem("Valor de transação não pode ser negativo ou igual a zero!");
-        defaultException.setDataHora(LocalDateTime.now());
         defaultException.setStatus(HttpStatus.BAD_REQUEST.value());
         return ResponseEntity.status(defaultException.getStatus()).body(defaultException);
     }

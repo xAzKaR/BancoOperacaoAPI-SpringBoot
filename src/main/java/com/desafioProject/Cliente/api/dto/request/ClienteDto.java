@@ -1,5 +1,6 @@
 package com.desafioProject.Cliente.api.dto.request;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.Data;
 import org.hibernate.validator.constraints.br.CNPJ;
 import org.hibernate.validator.constraints.br.CPF;
@@ -7,6 +8,7 @@ import javax.persistence.Column;
 import javax.validation.constraints.*;
 
 @Data
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ClienteDto {
 
     private Long id;

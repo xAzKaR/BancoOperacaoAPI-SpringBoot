@@ -16,6 +16,8 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Positive;
 import javax.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 @Data
@@ -49,6 +51,7 @@ public class ContaDto {
     @PositiveOrZero(message = "Campo não pode ser negativo!")
     private BigDecimal taxa;
 
-    @Temporal(TemporalType.DATE)
-    private Date dataCriacao;
+    private int saqueSemTaxa;
+
+    private String dataCriacao = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
 }

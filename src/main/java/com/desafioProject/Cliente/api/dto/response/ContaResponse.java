@@ -4,6 +4,8 @@ import com.desafioProject.Cliente.api.dto.request.ClienteDto;
 import com.desafioProject.Cliente.model.entity.enums.TipoDeConta;
 import lombok.Data;
 import javax.persistence.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 @Data
@@ -20,6 +22,5 @@ public class ContaResponse {
 
     private String mensagem = "Conta criada com sucesso!";
 
-    @Temporal(TemporalType.DATE)
-    private Date dataCriacao;
+    private String dataCriacao = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
 }

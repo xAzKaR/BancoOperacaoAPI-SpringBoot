@@ -10,6 +10,8 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 
 @Data
@@ -40,6 +42,7 @@ public class Conta {
 
     private BigDecimal taxa;
 
-    @Temporal(TemporalType.DATE)
-    private Date dataCriacao;
+    private int saqueSemTaxa;
+
+    private String dataCriacao = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
 }
