@@ -34,14 +34,14 @@ public class ClienteController {
         return ResponseEntity.ok(cliente);
     }
 
-    @GetMapping("/buscarCpf/{cpf}")
-    public ResponseEntity<ClienteDto> localizarCpf(@PathVariable("cpf") String cpf){
+    @GetMapping("/buscarCpf/")
+    public ResponseEntity<ClienteDto> localizarCpf(@RequestParam(name = "cpf") String cpf){
         ClienteDto clienteRetorno = clienteService.localizarCpf(cpf);
         return ResponseEntity.ok(clienteRetorno);
     }
 
-    @GetMapping("/buscarCnpj/{cnpj}")
-    public ResponseEntity<ClienteDto> localizarCnpj(@PathVariable("cnpj") String cnpj){
+    @GetMapping("/buscarCnpj/")
+    public ResponseEntity<ClienteDto> localizarCnpj(@RequestParam(name = "cnpj") String cnpj){
         ClienteDto clienteRetorno = clienteService.localizarCnpj(cnpj);
         return ResponseEntity.ok(clienteRetorno);
     }

@@ -2,6 +2,7 @@ package com.desafioProject.Cliente.api.dto.request;
 
 import com.desafioProject.Cliente.model.entity.Cliente;
 import com.desafioProject.Cliente.model.entity.enums.TipoDeConta;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -18,12 +19,12 @@ import javax.validation.constraints.PositiveOrZero;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Date;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ContaDto {
 
     private Long id;

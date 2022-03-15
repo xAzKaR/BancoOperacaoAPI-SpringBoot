@@ -29,19 +29,19 @@ public class OperacaoController {
     @PostMapping("/depositar")
     public ResponseEntity<OperacaoDepositoResponse> depositar(@RequestBody @Valid OperacaoDto operacaoDto) {
         OperacaoDepositoResponse depositar = operacaoService.depositar(operacaoDto);
-        return ResponseEntity.created(null).body(depositar);
+        return ResponseEntity.ok(depositar);
     }
 
     @PostMapping("/sacar")
     public ResponseEntity<OperacaoSaqueResponse> sacar(@RequestBody @Valid OperacaoDto operacaoDto) {
         OperacaoSaqueResponse sacar = operacaoService.sacar(operacaoDto);
-        return ResponseEntity.created(null).body(sacar);
+        return ResponseEntity.ok(sacar);
     }
 
     @PostMapping("/transferir")
     public ResponseEntity<OperacaoTransfResponse> transferir(@RequestBody @Valid OperacaoDto operacaoDto) {
         OperacaoTransfResponse transferir = operacaoService.transferir(operacaoDto);
-        return ResponseEntity.created(null).body(transferir);
+        return ResponseEntity.ok(transferir);
     }
 
     @GetMapping("/{id}")

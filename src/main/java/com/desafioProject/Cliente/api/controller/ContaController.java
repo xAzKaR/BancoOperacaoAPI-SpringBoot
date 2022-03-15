@@ -37,8 +37,8 @@ public class ContaController {
         return ResponseEntity.ok(conta);
     }
 
-    @GetMapping("/numeroDaConta/{numeroDaConta}")
-    public ResponseEntity<ContaDto> locazalicarConta(@PathVariable("numeroDaConta") String numeroDaConta) {
+    @GetMapping("/numeroDaConta/")
+    public ResponseEntity<ContaDto> locazalicarConta(@RequestParam("numeroDaConta") String numeroDaConta) {
         ContaDto conta = contaService.locazalicarConta(numeroDaConta);
         return ResponseEntity.ok(conta);
     }

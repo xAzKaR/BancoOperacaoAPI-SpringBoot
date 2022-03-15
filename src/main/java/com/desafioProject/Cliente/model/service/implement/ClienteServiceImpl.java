@@ -87,10 +87,9 @@ public class ClienteServiceImpl implements ClienteService {
         return repository
                 .findById(id)
                 .map(registro -> {
+                    registro.setNome(clienteDto.getNome());
                     registro.setCnpj(clienteDto.getCnpj());
                     registro.setCpf(clienteDto.getCpf());
-                    registro.setTelefone(clienteDto.getTelefone());
-                    registro.setEndereco(clienteDto.getEndereco());
                     repository.save(registro);
                     return mapperCliente.toDto(registro);
                 }).orElseThrow(ClienteNotFoundException::new);
