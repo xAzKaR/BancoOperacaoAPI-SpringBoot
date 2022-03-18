@@ -44,16 +44,10 @@ public class OperacaoServiceImpl implements OperacaoService {
     @Override
     @Transactional
     public OperacaoDepositoResponse depositar(OperacaoDto operacaoDto) {
-        if (!contaRepository.existsBynumeroDaConta(operacaoDto.getNumeroConta())) {
-            throw new ContaNotFoundException();
-        }
-
-        if (operacaoDto.getValorTransacao().doubleValue() <= 0) {
-            throw new ClienteNegativoOrZeroException();
-        }
+        ifGetNumeroDaConta(operacaoDto.getNumeroConta());
+        ifValorMenorIgualZero(operacaoDto);
 
         Operacao operacao = mapperOperacao.toModel(operacaoDto);
-
         Conta conta = contaRepository.findBynumeroDaConta(operacao.getNumeroConta());
 
         double valorSaldo = conta.getSaldo().doubleValue();
@@ -62,42 +56,30 @@ public class OperacaoServiceImpl implements OperacaoService {
 
         conta.setSaldo(BigDecimal.valueOf(novoSaldo));
         operacao.setSaldo(BigDecimal.valueOf(novoSaldo));
+
         operacao.setTipoDeOperacao(OperacaoEnum.DEPOSITO);
 
         contaRepository.save(conta);
 
         repository.save(operacao);
-
-        OperacaoDepositoResponse operacaoDepositoResponse = mapperOperacao.toResponse(operacao);
-
-        return operacaoDepositoResponse;
+        return mapperOperacao.toResponse(operacao);
     }
+
 
     @Override
     public OperacaoSaqueResponse sacar(OperacaoDto operacaoDto) {
-        if (!contaRepository.existsBynumeroDaConta(operacaoDto.getNumeroConta())) {
-            throw new ContaNotFoundException();
-        }
-        if (operacaoDto.getValorTransacao().doubleValue() <= 0) {
-            throw new ClienteNegativoOrZeroException();
-        }
+        ifGetNumeroDaConta(operacaoDto.getNumeroConta());
+        ifValorMenorIgualZero(operacaoDto);
 
         Operacao operacao = mapperOperacao.toModel(operacaoDto);
-
         Conta conta = contaRepository.findBynumeroDaConta(operacao.getNumeroConta());
 
         double valorDoSaque = operacaoDto.getValorTransacao().doubleValue();
         double valorDoSaldo = conta.getSaldo().doubleValue();
 
-        if (conta.getSaldo().doubleValue() < operacaoDto.getValorTransacao().doubleValue()) {
-            throw new ClienteSaldoException();
-        }
-//        conta.setSaldo(BigDecimal.valueOf(valorDoSaldo).subtract(BigDecimal.valueOf(valorDoSaque)));
-
+        ifChecaSaldoMenorValorTransacao(conta, operacaoDto);
         TipoDeConta tipoDeConta = conta.getTipo();
-
         operacao.setTipoDeOperacao(OperacaoEnum.SAQUE);
-//        operacao.setSaldo(BigDecimal.valueOf(valorDoSaldo));
 
         long quantidadeDeSaque = conta.getSaqueSemTaxa();
 
@@ -105,44 +87,19 @@ public class OperacaoServiceImpl implements OperacaoService {
         BigDecimal saque2 = BigDecimal.valueOf(valorDoSaldo).subtract(BigDecimal.valueOf(valorDoSaque).add(conta.getTaxa()));
 
         OperacaoSaqueResponse operacaoSaqueResponse = mapperOperacao.toSaqueResponse(operacao);
-        if (quantidadeDeSaque > 0) {
-            quantidadeDeSaque--;
 
-            conta.setSaldo(saque1);
-
-            operacao.setSaldo(BigDecimal.valueOf(conta.getSaldo().doubleValue()));
-            conta.setSaqueSemTaxa(Math.toIntExact(quantidadeDeSaque));
-
-            operacaoSaqueResponse.setMensagem("Saque efetuado com sucesso, você possui mais " + conta.getSaqueSemTaxa() + " saques disponíveis " +
-                    "após, será cobrado R$: " + tipoDeConta.getTaxa() + ",00");
-        } else if (conta.getSaldo().doubleValue() > (conta.getTaxa().doubleValue() + operacaoDto.getValorTransacao().doubleValue())) {
-
-//            conta.setSaldo(saque1.subtract(BigDecimal.valueOf(taxa.doubleValue())));
-
-            conta.setSaldo(saque2);
-            operacao.setSaldo(BigDecimal.valueOf(conta.getSaldo().doubleValue()));
-
-            operacaoSaqueResponse.setMensagem("Saque com taxa efetuado com sucesso, será adicionado um valor  de R$: "
-                    + tipoDeConta.getTaxa() + ",00 verifique com seu gerente um novo plano");
-        }
-
-        contaRepository.save(conta);
+        OperacaoSaque(operacaoDto, operacao, conta, tipoDeConta, quantidadeDeSaque, saque1, saque2, operacaoSaqueResponse);
 
         repository.save(operacao);
-
+        contaRepository.save(conta);
         return operacaoSaqueResponse;
     }
 
+
     @Override
     public OperacaoTransfResponse transferir(OperacaoDto operacaoDto) {
-        if (!contaRepository.existsBynumeroDaConta(operacaoDto.getNumeroConta())) {
-            throw new ContaNotFoundException();
-        } else if (!contaRepository.existsBynumeroDaConta(operacaoDto.getContaDestino())) {
-            throw new ContaNotFoundException();
-        }
-        if (operacaoDto.getValorTransacao().doubleValue() <= 0) {
-            throw new ClienteNegativoOrZeroException();
-        }
+        ifContaExistenteRetornaNotFound(operacaoDto);
+        ifValorMenorIgualZero(operacaoDto);
 
         Operacao operacao = mapperOperacao.toModel(operacaoDto);
 
@@ -153,13 +110,12 @@ public class OperacaoServiceImpl implements OperacaoService {
         double valorSaldocontaTransferida = contaTransferida.getSaldo().doubleValue();
         double valorDepositado = operacao.getValorTransacao().doubleValue();
 
-        if (contaTransferencia.getSaldo().doubleValue() < operacaoDto.getValorTransacao().doubleValue()) {
-            throw new ClienteSaldoException();
-        }
+        ifChecaSaldoMenorValorTransacao(contaTransferencia, operacaoDto);
 
         contaTransferencia.setSaldo(BigDecimal.valueOf(valorSaldoContaTransferencia).subtract(BigDecimal.valueOf(valorDepositado)));
         contaTransferida.setSaldo(BigDecimal.valueOf(valorSaldocontaTransferida).add(BigDecimal.valueOf(valorDepositado)));
-        operacao.setSaldo(BigDecimal.valueOf(valorDepositado));
+
+        operacao.setSaldo(BigDecimal.valueOf(contaTransferencia.getSaldo().doubleValue()));
 
         contaRepository.save(contaTransferencia);
         contaRepository.save(contaTransferida);
@@ -168,9 +124,9 @@ public class OperacaoServiceImpl implements OperacaoService {
 
         repository.save(operacao);
 
-        OperacaoTransfResponse operacaoTransfRetorno = mapperOperacao.toTransfResponse(operacao);
-        return operacaoTransfRetorno;
+        return mapperOperacao.toTransfResponse(operacao);
     }
+
 
     @Override
     public void deletar(Long id) {
@@ -194,5 +150,50 @@ public class OperacaoServiceImpl implements OperacaoService {
                 .stream()
                 .map(mapperOperacao::toDto)
                 .collect(Collectors.toList());
+    }
+
+
+    private void ifValorMenorIgualZero(OperacaoDto operacaoDto) {
+        if (operacaoDto.getValorTransacao().doubleValue() <= 0) {
+            throw new ClienteNegativoOrZeroException();
+        }
+    }
+
+    private void ifGetNumeroDaConta(String operacaoDto) {
+        if (!contaRepository.existsBynumeroDaConta(operacaoDto)) {
+            throw new ContaNotFoundException();
+        }
+    }
+
+    private void ifChecaSaldoMenorValorTransacao(Conta conta, OperacaoDto operacaoDto) {
+        if (conta.getSaldo().doubleValue() < operacaoDto.getValorTransacao().doubleValue()) {
+            throw new ClienteSaldoException();
+        }
+    }
+
+    private void ifContaExistenteRetornaNotFound(OperacaoDto operacaoDto) {
+        if (!contaRepository.existsBynumeroDaConta(operacaoDto.getNumeroConta())) {
+            throw new ContaNotFoundException();
+        } else ifGetNumeroDaConta(operacaoDto.getContaDestino());
+    }
+
+    private void OperacaoSaque(OperacaoDto operacaoDto, Operacao operacao, Conta conta, TipoDeConta tipoDeConta, long quantidadeDeSaque, BigDecimal saque1, BigDecimal saque2, OperacaoSaqueResponse operacaoSaqueResponse) {
+        if (quantidadeDeSaque > 0) {
+            quantidadeDeSaque--;
+
+            conta.setSaldo(saque1);
+
+            operacao.setSaldo(BigDecimal.valueOf(conta.getSaldo().doubleValue()));
+            conta.setSaqueSemTaxa(Math.toIntExact(quantidadeDeSaque));
+
+            operacaoSaqueResponse.setMensagem("Saque efetuado com sucesso, você possui mais " + conta.getSaqueSemTaxa() + " saques disponíveis " +
+                    "após, será cobrado R$: " + tipoDeConta.getTaxa() + ",00");
+        } else if (conta.getSaldo().doubleValue() > (conta.getTaxa().doubleValue() + operacaoDto.getValorTransacao().doubleValue())) {
+            conta.setSaldo(saque2);
+            operacao.setSaldo(BigDecimal.valueOf(conta.getSaldo().doubleValue()));
+
+            operacaoSaqueResponse.setMensagem("Saque com taxa efetuado com sucesso, será adicionado um valor  de R$: "
+                    + tipoDeConta.getTaxa() + ",00 verifique com seu gerente um novo plano");
+        }
     }
 }

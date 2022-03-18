@@ -25,20 +25,13 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public ClienteResponse salvar(ClienteDto clienteDto){
-        if(repository.existsBycpf(clienteDto.getCpf())){
-            throw new ClienteExistsException();
-        }
-        if(repository.existsBycnpj(clienteDto.getCnpj())){
-            throw new ClienteExistsByCnpjException();
-        }
-        if(clienteDto.getCnpj() == null && clienteDto.getCpf() == null){
-            throw new ClienteDocumentoNotBeNullException();
-        }
+        IfExistsCpfCnpjNotNull(clienteDto);
         Cliente cliente = mapperCliente.toModel(clienteDto);
         repository.save(cliente);
         ClienteResponse clienteDtoRetorno = mapperCliente.toResponse(cliente);
         return clienteDtoRetorno;
     }
+
 
     @Override
     public void deleteById(Long id) {
@@ -55,18 +48,14 @@ public class ClienteServiceImpl implements ClienteService {
 
     @Override
     public ClienteDto localizarCpf(String cpf) {
-        if(repository.findBycpf(cpf) == null || !repository.existsBycpf(cpf)){
-            throw new ClienteNotFoundException();
-        }
+        ifCpfNulleCpfInexistente(cpf);
         Cliente clienteRetorno = repository.findBycpf(cpf);
         return mapperCliente.toDto(clienteRetorno);
     }
 
     @Override
     public ClienteDto localizarCnpj(String cnpj) {
-        if(repository.findBycnpj(cnpj) == null || !repository.existsBycnpj(cnpj)){
-            throw new ClienteNotFoundException();
-        }
+        ifCnpjNulleCnpjInexistente(cnpj);
         Cliente clienteRetorno = repository.findBycnpj(cnpj);
         return mapperCliente.toDto(clienteRetorno);
     }
@@ -102,5 +91,29 @@ public class ClienteServiceImpl implements ClienteService {
                 .stream()
                 .map(mapperCliente::toDto)
                 .collect(Collectors.toList());
+    }
+
+    private void IfExistsCpfCnpjNotNull(ClienteDto clienteDto) {
+        if(repository.existsBycpf(clienteDto.getCpf())){
+            throw new ClienteExistsException();
+        }
+        if(repository.existsBycnpj(clienteDto.getCnpj())){
+            throw new ClienteExistsByCnpjException();
+        }
+        if(clienteDto.getCnpj() == null && clienteDto.getCpf() == null){
+            throw new ClienteDocumentoNotBeNullException();
+        }
+    }
+
+    private void ifCpfNulleCpfInexistente(String cpf) {
+        if(repository.findBycpf(cpf) == null || !repository.existsBycpf(cpf)){
+            throw new ClienteNotFoundException();
+        }
+    }
+
+    private void ifCnpjNulleCnpjInexistente(String cnpj) {
+        if(repository.findBycnpj(cnpj) == null || !repository.existsBycnpj(cnpj)){
+            throw new ClienteNotFoundException();
+        }
     }
 }
