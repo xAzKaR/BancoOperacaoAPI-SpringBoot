@@ -1,6 +1,7 @@
 package com.desafioProject.Cliente.model.entity;
 
 import com.desafioProject.Cliente.model.entity.enums.TipoDeConta;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -10,13 +11,15 @@ import javax.persistence.*;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
-import java.util.Date;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Conta {
 
     @Id
@@ -27,29 +30,20 @@ public class Conta {
     @JoinColumn(name = "cliente_id")
     private Cliente cliente;
 
-    @NotBlank
-    @NotNull
     private String numeroDaConta;
 
-    @NotBlank
-    @NotNull
     private String agencia;
 
     @Enumerated(EnumType.STRING)
     private TipoDeConta tipo;
 
-    @NotBlank
-    @NotNull
     private String digitoVerificador;
 
-    @NotBlank
-    @NotNull
     private BigDecimal saldo;
 
-    @NotBlank
-    @NotNull
     private BigDecimal taxa;
 
-    @Temporal(TemporalType.DATE)
-    private Date dataCriacao;
+    private int saqueSemTaxa;
+
+    private String dataCriacao = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
 }

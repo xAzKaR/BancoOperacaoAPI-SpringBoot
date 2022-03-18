@@ -1,10 +1,12 @@
 package com.desafioProject.Cliente.model.service.implement;
 
 import com.desafioProject.Cliente.api.dto.request.ContaDto;
+import com.desafioProject.Cliente.api.dto.response.ContaResponse;
 import com.desafioProject.Cliente.api.exception.ContaExistsException;
 import com.desafioProject.Cliente.api.exception.ContaNotFoundException;
 import com.desafioProject.Cliente.api.mappers.MapperConta;
 import com.desafioProject.Cliente.model.entity.Conta;
+import com.desafioProject.Cliente.model.entity.enums.TipoDeConta;
 import com.desafioProject.Cliente.model.repository.ContaRepository;
 import com.desafioProject.Cliente.model.service.ContaService;
 import lombok.RequiredArgsConstructor;
@@ -13,6 +15,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -27,16 +30,23 @@ public class ContaServiceImpl implements ContaService {
 
 
     @Override
-    public ContaDto salvar(ContaDto contaDto) {
+    public ContaResponse salvar(ContaDto contaDto) {
         if(repository.existsBynumeroDaConta(contaDto.getNumeroDaConta())){
             throw new ContaExistsException();
         }
 
+        TipoDeConta tipoDeConta = contaDto.getTipo();
+
         Conta conta = mapperConta.toModel(contaDto);
-        ContaDto contaDtoRetorno = mapperConta.toDto(conta);
+
+        conta.setSaqueSemTaxa(tipoDeConta.getQuantidadeDeSaque());
+        conta.setTaxa(tipoDeConta.getTaxa());
+        conta.setSaldo(BigDecimal.ZERO);
 
         repository.save(conta);
-        return contaDtoRetorno;
+
+        ContaResponse contaResponseRetorno = mapperConta.toResponse(conta);
+        return contaResponseRetorno;
     }
 
     @Override

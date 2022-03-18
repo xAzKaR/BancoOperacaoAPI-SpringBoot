@@ -1,6 +1,7 @@
 package com.desafioProject.Cliente.api.mappers;
 
 import com.desafioProject.Cliente.api.dto.request.ContaDto;
+import com.desafioProject.Cliente.api.dto.response.ContaResponse;
 import com.desafioProject.Cliente.model.entity.Conta;
 import org.mapstruct.Mapper;
 import org.mapstruct.MappingTarget;
@@ -12,4 +13,6 @@ public interface MapperConta {
     Conta toModel(ContaDto contaDto);
 
     void atualizar(ContaDto contaDto, @MappingTarget Conta conta);
+
+    ContaResponse toResponse(Conta conta);
 }

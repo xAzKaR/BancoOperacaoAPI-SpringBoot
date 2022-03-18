@@ -7,7 +7,8 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ClienteRepository extends PagingAndSortingRepository<Cliente, Long>, JpaSpecificationExecutor<Cliente> {
-    Cliente findBydocumento(String documento);
-    boolean existsBydocumento(String documento);
-
+    Cliente findBycpf(String cpf);
+    Cliente findBycnpj(String cnpj);
+    boolean existsBycpf(String cpf);
+    boolean existsBycnpj(String cnpj);
 }
