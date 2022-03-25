@@ -14,6 +14,7 @@ import com.desafioProject.Cliente.model.entity.Conta;
 import com.desafioProject.Cliente.model.entity.Operacao;
 import com.desafioProject.Cliente.model.entity.enums.OperacaoEnum;
 import com.desafioProject.Cliente.model.entity.enums.TipoDeConta;
+import com.desafioProject.Cliente.model.producer.OperacaoProducer;
 import com.desafioProject.Cliente.model.repository.ContaRepository;
 import com.desafioProject.Cliente.model.repository.OperacaoRepository;
 import com.desafioProject.Cliente.model.service.OperacaoService;
@@ -26,6 +27,7 @@ import org.springframework.stereotype.Service;
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -39,7 +41,7 @@ public class OperacaoServiceImpl implements OperacaoService {
     private final MapperConta mapperConta;
     private final ContaRepository contaRepository;
     private final ContaService contaService;
-
+    private final OperacaoProducer operacaoProducer;
 
     @Override
     @Transactional
@@ -60,7 +62,6 @@ public class OperacaoServiceImpl implements OperacaoService {
         operacao.setTipoDeOperacao(OperacaoEnum.DEPOSITO);
 
         contaRepository.save(conta);
-
         repository.save(operacao);
         return mapperOperacao.toResponse(operacao);
     }
@@ -78,6 +79,7 @@ public class OperacaoServiceImpl implements OperacaoService {
         double valorDoSaldo = conta.getSaldo().doubleValue();
 
         ifChecaSaldoMenorValorTransacao(conta, operacaoDto);
+
         TipoDeConta tipoDeConta = conta.getTipo();
         operacao.setTipoDeOperacao(OperacaoEnum.SAQUE);
 
@@ -90,8 +92,19 @@ public class OperacaoServiceImpl implements OperacaoService {
 
         OperacaoSaque(operacaoDto, operacao, conta, tipoDeConta, quantidadeDeSaque, saque1, saque2, operacaoSaqueResponse);
 
-        repository.save(operacao);
+//        KafkaTeste
+        var KafkaOperacao = Operacao.builder()
+                        .id(Math.abs(UUID.randomUUID().getLeastSignificantBits()))
+                        .numeroConta(conta.getNumeroDaConta())
+                        .tipoDeOperacao(OperacaoEnum.SAQUE)
+                        .valorTransacao(operacaoDto.getValorTransacao())
+                        .taxaDeTransferencia(tipoDeConta.getTaxa())
+                        .saldo(conta.getSaldo())
+                        .build();
+
+        operacaoProducer.enviar(KafkaOperacao);
         contaRepository.save(conta);
+        repository.save(operacao);
         return operacaoSaqueResponse;
     }
 
