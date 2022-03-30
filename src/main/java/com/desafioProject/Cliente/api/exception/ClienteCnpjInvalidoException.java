@@ -1,4 +1,0 @@
-package com.desafioProject.Cliente.api.exception;
-
-public class ClienteCnpjInvalidoException extends RuntimeException {
-}
