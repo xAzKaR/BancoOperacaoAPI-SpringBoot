@@ -1,5 +1,6 @@
 package com.desafioProject.Cliente.api.config;
 
+import com.desafioProject.Cliente.model.entity.Conta;
 import com.desafioProject.Cliente.model.entity.Operacao;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.ProducerConfig;
@@ -31,15 +32,30 @@ public class KafkaProducerConfig {
 
     @Bean
     public ProducerFactory<String, Operacao> OperacaoProducerFactory() {
-        Map<String, Object> configProps = new HashMap<>();
-        configProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
-        configProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
-        configProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
-        return new DefaultKafkaProducerFactory<>(configProps);
+        return getStringProducerFactory();
     }
 
     @Bean
-    public KafkaTemplate<String, Operacao> carafkaTemplate(){
+    public ProducerFactory<String, Conta> ContaProducerFactory() {
+        return getStringProducerFactory();
+    }
+
+    private <T> ProducerFactory<String, T> getStringProducerFactory() {
+        Map<String, Object> configOp = new HashMap<>();
+        configOp.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapAddress);
+        configOp.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, LongSerializer.class);
+        configOp.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, JsonSerializer.class);
+        return new DefaultKafkaProducerFactory<>(configOp);
+    }
+
+
+    @Bean
+    public KafkaTemplate<String, Conta> kafkaTemplate(){
+        return new KafkaTemplate<>(ContaProducerFactory());
+    }
+
+    @Bean
+    public KafkaTemplate<String, Operacao> kaffkaTemplate(){
         return new KafkaTemplate<>(OperacaoProducerFactory());
     }
 

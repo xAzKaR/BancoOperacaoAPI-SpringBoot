@@ -7,6 +7,7 @@ import com.desafioProject.Cliente.api.exception.ContaNotFoundException;
 import com.desafioProject.Cliente.api.mappers.MapperConta;
 import com.desafioProject.Cliente.model.entity.Conta;
 import com.desafioProject.Cliente.model.entity.enums.TipoDeConta;
+import com.desafioProject.Cliente.model.producer.ContaProducer;
 import com.desafioProject.Cliente.model.repository.ContaRepository;
 import com.desafioProject.Cliente.model.service.ContaService;
 import lombok.RequiredArgsConstructor;
@@ -27,7 +28,7 @@ public class ContaServiceImpl implements ContaService {
     private final ContaRepository repository;
     private final ModelMapper modelMapper;
     private final MapperConta mapperConta;
-
+    private final ContaProducer contaProducer;
 
     @Override
     public ContaResponse salvar(ContaDto contaDto) {
@@ -37,6 +38,8 @@ public class ContaServiceImpl implements ContaService {
         conta.setSaqueSemTaxa(tipoDeConta.getQuantidadeDeSaque());
         conta.setTaxa(tipoDeConta.getTaxa());
         conta.setSaldo(BigDecimal.ZERO);
+
+        contaProducer.enviar(conta);
         repository.save(conta);
         ContaResponse contaResponseRetorno = mapperConta.toResponse(conta);
         return contaResponseRetorno;
@@ -60,7 +63,6 @@ public class ContaServiceImpl implements ContaService {
         Conta conta = repository.findBynumeroDaConta(numeroDaConta);
         return mapperConta.toDto(conta);
     }
-
 
 
     @Override
@@ -94,7 +96,7 @@ public class ContaServiceImpl implements ContaService {
     }
 
     private void ifExisteNumeroDaContaRetornaException(ContaDto contaDto) {
-        if(repository.existsBynumeroDaConta(contaDto.getNumeroDaConta())){
+        if (repository.existsBynumeroDaConta(contaDto.getNumeroDaConta())) {
             throw new ContaExistsException();
         }
     }
