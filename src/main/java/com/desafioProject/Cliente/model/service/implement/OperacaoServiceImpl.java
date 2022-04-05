@@ -8,7 +8,6 @@ import com.desafioProject.Cliente.api.exception.ClienteNegativoOrZeroException;
 import com.desafioProject.Cliente.api.exception.ClienteSaldoException;
 import com.desafioProject.Cliente.api.exception.ContaNotFoundException;
 import com.desafioProject.Cliente.api.exception.OperacaoNotFoundException;
-import com.desafioProject.Cliente.api.mappers.MapperConta;
 import com.desafioProject.Cliente.api.mappers.MapperOperacao;
 import com.desafioProject.Cliente.model.entity.Conta;
 import com.desafioProject.Cliente.model.entity.Operacao;
@@ -18,11 +17,12 @@ import com.desafioProject.Cliente.model.producer.OperacaoProducer;
 import com.desafioProject.Cliente.model.repository.ContaRepository;
 import com.desafioProject.Cliente.model.repository.OperacaoRepository;
 import com.desafioProject.Cliente.model.service.OperacaoService;
-import com.desafioProject.Cliente.model.service.ContaService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
@@ -36,12 +36,11 @@ import java.util.stream.Collectors;
 public class OperacaoServiceImpl implements OperacaoService {
 
     private final OperacaoRepository repository;
-    private final ModelMapper modelMapper;
     private final MapperOperacao mapperOperacao;
-    private final MapperConta mapperConta;
     private final ContaRepository contaRepository;
-    private final ContaService contaService;
     private final OperacaoProducer operacaoProducer;
+    private final JedisPool pool = new JedisPool(new JedisPoolConfig(), "localhost", 6379);
+    private Jedis jedis = new Jedis();
 
     @Override
     @Transactional
@@ -51,6 +50,8 @@ public class OperacaoServiceImpl implements OperacaoService {
 
         Operacao operacao = mapperOperacao.toModel(operacaoDto);
         Conta conta = contaRepository.findBynumeroDaConta(operacao.getNumeroConta());
+
+        operacao.setConta(conta);
 
         double valorSaldo = conta.getSaldo().doubleValue();
         double valorDepositado = operacao.getValorTransacao().doubleValue();
@@ -69,11 +70,13 @@ public class OperacaoServiceImpl implements OperacaoService {
 
     @Override
     public OperacaoSaqueResponse sacar(OperacaoDto operacaoDto) {
+//        jedis = pool.getResource();
+
         ifGetNumeroDaConta(operacaoDto.getNumeroConta());
         ifValorMenorIgualZero(operacaoDto);
 
         Operacao operacao = mapperOperacao.toModel(operacaoDto);
-        Conta conta = contaRepository.findBynumeroDaConta(operacao.getNumeroConta());
+        Conta conta = contaRepository.findBynumeroDaConta(operacaoDto.getNumeroConta());
 
         double valorDoSaque = operacaoDto.getValorTransacao().doubleValue();
         double valorDoSaldo = conta.getSaldo().doubleValue();
@@ -83,31 +86,23 @@ public class OperacaoServiceImpl implements OperacaoService {
         TipoDeConta tipoDeConta = conta.getTipo();
         operacao.setTipoDeOperacao(OperacaoEnum.SAQUE);
 
-        long quantidadeDeSaque = conta.getSaqueSemTaxa();
-
         BigDecimal saque1 = BigDecimal.valueOf(valorDoSaldo).subtract(BigDecimal.valueOf(valorDoSaque));
         BigDecimal saque2 = BigDecimal.valueOf(valorDoSaldo).subtract(BigDecimal.valueOf(valorDoSaque).add(conta.getTaxa()));
 
+        operacao.setConta(conta);
+
         OperacaoSaqueResponse operacaoSaqueResponse = mapperOperacao.toSaqueResponse(operacao);
 
-        OperacaoSaque(operacaoDto, operacao, conta, tipoDeConta, quantidadeDeSaque, saque1, saque2, operacaoSaqueResponse);
+        int quantidadeDesaque = Integer.parseInt(jedis.get(conta.getNumeroDaConta()));
+        OperacaoSaque(operacaoDto, operacao, conta, tipoDeConta, quantidadeDesaque, saque1, saque2, operacaoSaqueResponse);
 
-//        KafkaTeste
-        var KafkaOperacao = Operacao.builder()
-                        .id(Math.abs(UUID.randomUUID().getLeastSignificantBits()))
-                        .numeroConta(conta.getNumeroDaConta())
-                        .tipoDeOperacao(OperacaoEnum.SAQUE)
-                        .valorTransacao(operacaoDto.getValorTransacao())
-                        .taxaDeTransferencia(tipoDeConta.getTaxa())
-                        .saldo(conta.getSaldo())
-                        .build();
+        Operacao KafkaOperacao = criafKafkaOperacao(operacaoDto, conta, tipoDeConta);
 
         operacaoProducer.enviar(KafkaOperacao);
         contaRepository.save(conta);
         repository.save(operacao);
         return operacaoSaqueResponse;
     }
-
 
     @Override
     public OperacaoTransfResponse transferir(OperacaoDto operacaoDto) {
@@ -120,15 +115,17 @@ public class OperacaoServiceImpl implements OperacaoService {
         Conta contaTransferida = contaRepository.findBynumeroDaConta(operacao.getContaDestino());
 
         double valorSaldoContaTransferencia = contaTransferencia.getSaldo().doubleValue();
-        double valorSaldocontaTransferida = contaTransferida.getSaldo().doubleValue();
+        double valorSaldoContaTransferida = contaTransferida.getSaldo().doubleValue();
         double valorDepositado = operacao.getValorTransacao().doubleValue();
 
         ifChecaSaldoMenorValorTransacao(contaTransferencia, operacaoDto);
 
         contaTransferencia.setSaldo(BigDecimal.valueOf(valorSaldoContaTransferencia).subtract(BigDecimal.valueOf(valorDepositado)));
-        contaTransferida.setSaldo(BigDecimal.valueOf(valorSaldocontaTransferida).add(BigDecimal.valueOf(valorDepositado)));
+        contaTransferida.setSaldo(BigDecimal.valueOf(valorSaldoContaTransferida).add(BigDecimal.valueOf(valorDepositado)));
 
         operacao.setSaldo(BigDecimal.valueOf(contaTransferencia.getSaldo().doubleValue()));
+
+        operacao.setConta(contaTransferencia);
 
         contaRepository.save(contaTransferencia);
         contaRepository.save(contaTransferida);
@@ -165,7 +162,6 @@ public class OperacaoServiceImpl implements OperacaoService {
                 .collect(Collectors.toList());
     }
 
-
     private void ifValorMenorIgualZero(OperacaoDto operacaoDto) {
         if (operacaoDto.getValorTransacao().doubleValue() <= 0) {
             throw new ClienteNegativoOrZeroException();
@@ -190,23 +186,37 @@ public class OperacaoServiceImpl implements OperacaoService {
         } else ifGetNumeroDaConta(operacaoDto.getContaDestino());
     }
 
-    private void OperacaoSaque(OperacaoDto operacaoDto, Operacao operacao, Conta conta, TipoDeConta tipoDeConta, long quantidadeDeSaque, BigDecimal saque1, BigDecimal saque2, OperacaoSaqueResponse operacaoSaqueResponse) {
-        if (quantidadeDeSaque > 0) {
-            quantidadeDeSaque--;
-
+    private void OperacaoSaque(OperacaoDto operacaoDto, Operacao operacao, Conta conta, TipoDeConta tipoDeConta, int quantidadeDesaque, BigDecimal saque1, BigDecimal saque2, OperacaoSaqueResponse operacaoSaqueResponse) {
+        if (quantidadeDesaque > 0) {
+            quantidadeDesaque--;
             conta.setSaldo(saque1);
 
+            conta.setSaqueSemTaxa(Integer.parseInt(jedis.get(conta.getNumeroDaConta())));
             operacao.setSaldo(BigDecimal.valueOf(conta.getSaldo().doubleValue()));
-            conta.setSaqueSemTaxa(Math.toIntExact(quantidadeDeSaque));
 
-            operacaoSaqueResponse.setMensagem("Saque efetuado com sucesso, você possui mais " + conta.getSaqueSemTaxa() + " saques disponíveis " +
+            jedis.set(conta.getNumeroDaConta(), Integer.toString(quantidadeDesaque));
+            operacaoSaqueResponse.setMensagem("Saque efetuado com sucesso, você possui mais " + Integer.parseInt(jedis.get(conta.getNumeroDaConta())) + " saques disponíveis " +
                     "após, será cobrado R$: " + tipoDeConta.getTaxa() + ",00");
         } else if (conta.getSaldo().doubleValue() > (conta.getTaxa().doubleValue() + operacaoDto.getValorTransacao().doubleValue())) {
             conta.setSaldo(saque2);
             operacao.setSaldo(BigDecimal.valueOf(conta.getSaldo().doubleValue()));
 
+            conta.setSaqueSemTaxa(Integer.parseInt(conta.getNumeroDaConta()));
+
             operacaoSaqueResponse.setMensagem("Saque com taxa efetuado com sucesso, será adicionado um valor  de R$: "
                     + tipoDeConta.getTaxa() + ",00 verifique com seu gerente um novo plano");
         }
+    }
+
+    private Operacao criafKafkaOperacao(OperacaoDto operacaoDto, Conta conta, TipoDeConta tipoDeConta) {
+        var KafkaOperacao = Operacao.builder()
+                .id(Math.abs(UUID.randomUUID().getLeastSignificantBits()))
+                .numeroConta(conta.getNumeroDaConta())
+                .tipoDeOperacao(OperacaoEnum.SAQUE)
+                .valorTransacao(operacaoDto.getValorTransacao())
+                .taxaDeTransferencia(tipoDeConta.getTaxa())
+                .saldo(conta.getSaldo())
+                .build();
+        return KafkaOperacao;
     }
 }

@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import redis.clients.jedis.Jedis;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -40,6 +41,7 @@ public class ContaServiceImpl implements ContaService {
         conta.setSaldo(BigDecimal.ZERO);
 
         contaProducer.enviar(conta);
+
         repository.save(conta);
         ContaResponse contaResponseRetorno = mapperConta.toResponse(conta);
         return contaResponseRetorno;
