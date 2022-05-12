@@ -37,5 +37,4 @@ public class ClienteDtoBuilder {
     public ClienteDto criar() {
         return clienteDto;
     }
-
 }
