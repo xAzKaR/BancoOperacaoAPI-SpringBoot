@@ -1,6 +1,7 @@
 package com.desafioProject.Cliente.model.entity;
 
 import com.desafioProject.Cliente.model.entity.enums.OperacaoEnum;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import lombok.*;
 import javax.persistence.*;
@@ -31,4 +32,7 @@ public class Operacao {
 
     private BigDecimal saldo;
 
+    @JoinColumn(name = "conta_id")
+    @ManyToOne
+    private Conta conta;
 }

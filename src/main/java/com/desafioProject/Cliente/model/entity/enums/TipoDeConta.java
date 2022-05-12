@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Getter
-public enum TipoDeConta {
+public enum TipoDeConta{
     Fisica(new BigDecimal(10), 5),
     Juridica(new BigDecimal(10), 50),
     Governamental(new BigDecimal(20), 250);

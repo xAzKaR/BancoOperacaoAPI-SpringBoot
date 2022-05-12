@@ -9,4 +9,5 @@ import org.springframework.stereotype.Repository;
 public interface ContaRepository extends JpaRepository<Conta, Long>, JpaSpecificationExecutor<Conta> {
     Conta findBynumeroDaConta(String numeroDaConta);
     boolean existsBynumeroDaConta(String numeroDaConta);
+    void deleteContaByNumeroDaConta(String numeroDaConta);
 }

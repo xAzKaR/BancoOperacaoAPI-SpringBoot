@@ -1,17 +1,19 @@
 package com.desafioProject.Cliente.model.service.implement;
 
-import com.desafioProject.Cliente.api.dto.request.ContaDto;
-import com.desafioProject.Cliente.api.dto.response.ContaResponse;
-import com.desafioProject.Cliente.api.exception.ContaExistsException;
-import com.desafioProject.Cliente.api.exception.ContaNotFoundException;
-import com.desafioProject.Cliente.api.mappers.MapperConta;
 import com.desafioProject.Cliente.model.entity.Conta;
 import com.desafioProject.Cliente.model.entity.enums.TipoDeConta;
+import com.desafioProject.Cliente.model.producerMedico.ContaProducerMedico;
+import com.desafioProject.Cliente.model.producerTaxas.ContaProducer;
 import com.desafioProject.Cliente.model.repository.ContaRepository;
 import com.desafioProject.Cliente.model.service.ContaService;
+import com.desafioProject.Cliente.viewer.dto.request.ContaDto;
+import com.desafioProject.Cliente.viewer.dto.response.ContaResponse;
+import com.desafioProject.Cliente.viewer.exception.ContaExistsException;
+import com.desafioProject.Cliente.viewer.exception.ContaNotFoundException;
+import com.desafioProject.Cliente.viewer.exception.OperacaoNaoCompletadaException;
+import com.desafioProject.Cliente.viewer.mappers.MapperConta;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.modelmapper.ModelMapper;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -25,26 +27,39 @@ import java.util.stream.Collectors;
 public class ContaServiceImpl implements ContaService {
 
     private final ContaRepository repository;
-    private final ModelMapper modelMapper;
     private final MapperConta mapperConta;
-
+    private final ContaProducer contaProducer;
+    private final ContaProducerMedico contaProducerMedico;
 
     @Override
     public ContaResponse salvar(ContaDto contaDto) {
         ifExisteNumeroDaContaRetornaException(contaDto);
+
         TipoDeConta tipoDeConta = contaDto.getTipo();
+
         Conta conta = mapperConta.toModel(contaDto);
         conta.setSaqueSemTaxa(tipoDeConta.getQuantidadeDeSaque());
         conta.setTaxa(tipoDeConta.getTaxa());
         conta.setSaldo(BigDecimal.ZERO);
-        repository.save(conta);
-        ContaResponse contaResponseRetorno = mapperConta.toResponse(conta);
-        return contaResponseRetorno;
+
+        try {
+            contaProducer.enviar(conta);
+            contaProducerMedico.enviar(conta);
+            repository.save(conta);
+        } catch (Exception e) {
+            throw new OperacaoNaoCompletadaException();
+        }
+        return mapperConta.toResponse(conta);
     }
 
     @Override
     public void deletar(Long id) {
         repository.deleteById(id);
+    }
+
+    @Override
+    public void deletarNumeroDaConta(String numeroDaConta) {
+        repository.deleteContaByNumeroDaConta(numeroDaConta);
     }
 
     @Override
@@ -62,14 +77,12 @@ public class ContaServiceImpl implements ContaService {
     }
 
 
-
     @Override
     public ContaDto atualizar(ContaDto contaDto, Long id) {
         Conta conta = repository.findById(id).orElseThrow(ContaNotFoundException::new);
         mapperConta.atualizar(contaDto, conta);
         repository.save(conta);
-        ContaDto contaDtoRetorno = mapperConta.toDto(conta);
-        return contaDtoRetorno;
+        return mapperConta.toDto(conta);
     }
 
     @Override
@@ -94,7 +107,7 @@ public class ContaServiceImpl implements ContaService {
     }
 
     private void ifExisteNumeroDaContaRetornaException(ContaDto contaDto) {
-        if(repository.existsBynumeroDaConta(contaDto.getNumeroDaConta())){
+        if (repository.existsBynumeroDaConta(contaDto.getNumeroDaConta())) {
             throw new ContaExistsException();
         }
     }

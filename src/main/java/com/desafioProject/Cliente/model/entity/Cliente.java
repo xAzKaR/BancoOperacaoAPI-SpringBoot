@@ -2,15 +2,16 @@ package com.desafioProject.Cliente.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+
 import javax.persistence.*;
 import java.util.List;
+
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 @Entity
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Cliente {
@@ -30,6 +31,6 @@ public class Cliente {
     private String endereco;
 
     @JsonIgnore
-    @OneToMany
+    @OneToMany(mappedBy = "cliente")
     private List<Conta> contas;
 }

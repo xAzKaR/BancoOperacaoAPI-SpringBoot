@@ -1,7 +1,7 @@
 package com.desafioProject.Cliente.model.service;
 
-import com.desafioProject.Cliente.api.dto.request.ClienteDto;
-import com.desafioProject.Cliente.api.dto.response.ClienteResponse;
+import com.desafioProject.Cliente.viewer.dto.request.ClienteDto;
+import com.desafioProject.Cliente.viewer.dto.response.ClienteResponse;
 
 import java.util.List;
 
