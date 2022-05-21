@@ -62,15 +62,12 @@ public class OperacaoController {
     @GetMapping
     public ResponseEntity<List<OperacaoDto>> listar(){
         List<OperacaoDto> listaOperacoes = operacaoService.listar();
-
         return ResponseEntity.ok(listaOperacoes);
     }
 
     @GetMapping("/pagina/{numeroPagina}/{qtdePagina}")
     public ResponseEntity<Iterable<Operacao>> listAll(@PathVariable int numeroPagina, @PathVariable int qtdePagina){
         Pageable page = PageRequest.of(numeroPagina, qtdePagina);
-
         return ResponseEntity.ok(operacaoRepository.findAll(page));
-
     }
 }
