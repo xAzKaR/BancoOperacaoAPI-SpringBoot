@@ -26,6 +26,26 @@ public class OperacaoDtoBuilder {
         return builder;
     }
 
+    public static OperacaoDtoBuilder operacaoDtoDepositoValorNegativo() {
+        OperacaoDtoBuilder builder = new OperacaoDtoBuilder();
+        builder.operacaoDto = new OperacaoDto();
+        builder.operacaoDto.setId(1L);
+        builder.operacaoDto.setNumeroConta("222");
+        builder.operacaoDto.setValorTransacao(new BigDecimal(-100));
+        builder.operacaoDto.setTipoDeOperacao(OperacaoEnum.DEPOSITO);
+        return builder;
+    }
+
+    public static OperacaoDtoBuilder operacaoDtoDepositoValorZerado() {
+        OperacaoDtoBuilder builder = new OperacaoDtoBuilder();
+        builder.operacaoDto = new OperacaoDto();
+        builder.operacaoDto.setId(1L);
+        builder.operacaoDto.setNumeroConta("222");
+        builder.operacaoDto.setValorTransacao(new BigDecimal(0));
+        builder.operacaoDto.setTipoDeOperacao(OperacaoEnum.DEPOSITO);
+        return builder;
+    }
+
     public static OperacaoDtoBuilder operacaoSaque() {
         OperacaoDtoBuilder builder = new OperacaoDtoBuilder();
         builder.operacaoDto = new OperacaoDto();

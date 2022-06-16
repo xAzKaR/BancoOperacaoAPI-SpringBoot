@@ -1,12 +1,5 @@
 package com.desafioProject.Cliente.model.service.implement;
 
-import com.desafioProject.Cliente.model.producerMedico.OperacaoProducerMedico;
-import com.desafioProject.Cliente.viewer.dto.request.OperacaoDto;
-import com.desafioProject.Cliente.viewer.dto.response.OperacaoDepositoResponse;
-import com.desafioProject.Cliente.viewer.dto.response.OperacaoSaqueResponse;
-import com.desafioProject.Cliente.viewer.dto.response.OperacaoTransfResponse;
-import com.desafioProject.Cliente.viewer.exception.*;
-import com.desafioProject.Cliente.viewer.mappers.MapperOperacao;
 import com.desafioProject.Cliente.model.entity.Conta;
 import com.desafioProject.Cliente.model.entity.Operacao;
 import com.desafioProject.Cliente.model.entity.enums.OperacaoEnum;
@@ -15,6 +8,12 @@ import com.desafioProject.Cliente.model.producerTaxas.OperacaoProducer;
 import com.desafioProject.Cliente.model.repository.ContaRepository;
 import com.desafioProject.Cliente.model.repository.OperacaoRepository;
 import com.desafioProject.Cliente.model.service.OperacaoService;
+import com.desafioProject.Cliente.viewer.dto.request.OperacaoDto;
+import com.desafioProject.Cliente.viewer.dto.response.OperacaoDepositoResponse;
+import com.desafioProject.Cliente.viewer.dto.response.OperacaoSaqueResponse;
+import com.desafioProject.Cliente.viewer.dto.response.OperacaoTransfResponse;
+import com.desafioProject.Cliente.viewer.exception.*;
+import com.desafioProject.Cliente.viewer.mappers.MapperOperacao;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -26,8 +25,6 @@ import javax.transaction.Transactional;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
@@ -39,7 +36,7 @@ public class OperacaoServiceImpl implements OperacaoService {
     private final MapperOperacao mapperOperacao;
     private final ContaRepository contaRepository;
     private final OperacaoProducer operacaoProducer;
-    private final OperacaoProducerMedico operacaoProducerMedico;
+    //    private final OperacaoProducerMedico operacaoProducerMedico;
     private final JedisPool pool = new JedisPool(new JedisPoolConfig(), "localhost", 6379);
     private Jedis jedis = new Jedis();
 
@@ -73,7 +70,6 @@ public class OperacaoServiceImpl implements OperacaoService {
 
         try {
             operacaoProducer.enviar(KafkaDeposito);
-            operacaoProducerMedico.enviar(KafkaDeposito);
         } catch (Exception e) {
             throw new OperacaoNaoCompletadaException();
         }

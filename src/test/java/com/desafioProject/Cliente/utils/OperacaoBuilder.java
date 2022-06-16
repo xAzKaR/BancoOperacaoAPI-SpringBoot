@@ -25,6 +25,26 @@ public class OperacaoBuilder {
         return builder;
     }
 
+    public static OperacaoBuilder operacaoDepositoValorZerado() {
+        OperacaoBuilder builder = new OperacaoBuilder();
+        builder.operacao = new Operacao();
+        builder.operacao.setId(1L);
+        builder.operacao.setNumeroConta("222");
+        builder.operacao.setValorTransacao(new BigDecimal(0));
+        builder.operacao.setTipoDeOperacao(OperacaoEnum.SAQUE);
+        return builder;
+    }
+
+    public static OperacaoBuilder operacaoDepositoValorNegativo() {
+        OperacaoBuilder builder = new OperacaoBuilder();
+        builder.operacao = new Operacao();
+        builder.operacao.setId(1L);
+        builder.operacao.setNumeroConta("222");
+        builder.operacao.setValorTransacao(new BigDecimal(-100));
+        builder.operacao.setTipoDeOperacao(OperacaoEnum.SAQUE);
+        return builder;
+    }
+
     public static OperacaoBuilder operacaoSaque() {
         OperacaoBuilder builder = new OperacaoBuilder();
         builder.operacao = new Operacao();

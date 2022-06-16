@@ -2,7 +2,6 @@ package com.desafioProject.Cliente.model.service.implement;
 
 import com.desafioProject.Cliente.model.entity.Conta;
 import com.desafioProject.Cliente.model.entity.enums.TipoDeConta;
-import com.desafioProject.Cliente.model.producerMedico.ContaProducerMedico;
 import com.desafioProject.Cliente.model.producerTaxas.ContaProducer;
 import com.desafioProject.Cliente.model.repository.ContaRepository;
 import com.desafioProject.Cliente.model.service.ContaService;
@@ -29,7 +28,7 @@ public class ContaServiceImpl implements ContaService {
     private final ContaRepository repository;
     private final MapperConta mapperConta;
     private final ContaProducer contaProducer;
-    private final ContaProducerMedico contaProducerMedico;
+//    private final ContaProducerMedico contaProducerMedico;
 
     @Override
     public ContaResponse salvar(ContaDto contaDto) {
@@ -44,7 +43,7 @@ public class ContaServiceImpl implements ContaService {
 
         try {
             contaProducer.enviar(conta);
-            contaProducerMedico.enviar(conta);
+//            contaProducerMedico.enviar(conta);
             repository.save(conta);
         } catch (Exception e) {
             throw new OperacaoNaoCompletadaException();
