@@ -18,8 +18,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 
 import javax.transaction.Transactional;
 import java.math.BigDecimal;
@@ -36,8 +34,6 @@ public class OperacaoServiceImpl implements OperacaoService {
     private final MapperOperacao mapperOperacao;
     private final ContaRepository contaRepository;
     private final OperacaoProducer operacaoProducer;
-    //    private final OperacaoProducerMedico operacaoProducerMedico;
-    private final JedisPool pool = new JedisPool(new JedisPoolConfig(), "localhost", 6379);
     private Jedis jedis = new Jedis();
 
     @Override
@@ -60,7 +56,7 @@ public class OperacaoServiceImpl implements OperacaoService {
 
         operacao.setTipoDeOperacao(OperacaoEnum.DEPOSITO);
 
-        var KafkaDeposito = Operacao.builder()
+        var kafkaDeposito = Operacao.builder()
                 .id(Math.abs(UUID.randomUUID().getLeastSignificantBits()))
                 .numeroConta(conta.getNumeroDaConta())
                 .tipoDeOperacao(OperacaoEnum.DEPOSITO)
@@ -69,7 +65,7 @@ public class OperacaoServiceImpl implements OperacaoService {
                 .build();
 
         try {
-            operacaoProducer.enviar(KafkaDeposito);
+            operacaoProducer.enviar(kafkaDeposito);
         } catch (Exception e) {
             throw new OperacaoNaoCompletadaException();
         }
@@ -82,8 +78,6 @@ public class OperacaoServiceImpl implements OperacaoService {
 
     @Override
     public OperacaoSaqueResponse sacar(OperacaoDto operacaoDto) {
-//        jedis = pool.getResource();
-
         ifGetNumeroDaConta(operacaoDto.getNumeroConta());
         ifValorMenorIgualZero(operacaoDto);
 
@@ -106,15 +100,14 @@ public class OperacaoServiceImpl implements OperacaoService {
         OperacaoSaqueResponse operacaoSaqueResponse = mapperOperacao.toSaqueResponse(operacao);
 
         int quantidadeDesaque = Integer.parseInt(jedis.get(conta.getNumeroDaConta()));
-        OperacaoSaque(operacaoDto, operacao, conta, tipoDeConta, quantidadeDesaque, saque1, saque2, operacaoSaqueResponse);
+        operacaoSaque(operacaoDto, operacao, conta, tipoDeConta, quantidadeDesaque, saque1, saque2, operacaoSaqueResponse);
 
-        Operacao KafkaOperacao = criafKafkaOperacao(operacaoDto, conta, tipoDeConta);
+        Operacao kafkaOperacao = criafKafkaOperacao(operacaoDto, conta, tipoDeConta);
 
         try {
-            operacaoProducer.enviar(KafkaOperacao);
+            operacaoProducer.enviar(kafkaOperacao);
             contaRepository.save(conta);
             repository.save(operacao);
-
         } catch (Exception ex) {
             throw new OperacaoNaoCompletadaException();
         }
@@ -204,7 +197,7 @@ public class OperacaoServiceImpl implements OperacaoService {
         } else ifGetNumeroDaConta(operacaoDto.getContaDestino());
     }
 
-    private void OperacaoSaque(OperacaoDto operacaoDto, Operacao operacao, Conta conta, TipoDeConta tipoDeConta, int quantidadeDesaque, BigDecimal saque1, BigDecimal saque2, OperacaoSaqueResponse operacaoSaqueResponse) {
+    private void operacaoSaque(OperacaoDto operacaoDto, Operacao operacao, Conta conta, TipoDeConta tipoDeConta, int quantidadeDesaque, BigDecimal saque1, BigDecimal saque2, OperacaoSaqueResponse operacaoSaqueResponse) {
         if (quantidadeDesaque > 0) {
             quantidadeDesaque--;
             conta.setSaldo(saque1);
@@ -227,7 +220,7 @@ public class OperacaoServiceImpl implements OperacaoService {
     }
 
     private Operacao criafKafkaOperacao(OperacaoDto operacaoDto, Conta conta, TipoDeConta tipoDeConta) {
-        var KafkaOperacao = Operacao.builder()
+       return Operacao.builder()
                 .id(Math.abs(UUID.randomUUID().getLeastSignificantBits()))
                 .numeroConta(conta.getNumeroDaConta())
                 .tipoDeOperacao(OperacaoEnum.SAQUE)
@@ -235,6 +228,5 @@ public class OperacaoServiceImpl implements OperacaoService {
                 .taxaDeTransferencia(tipoDeConta.getTaxa())
                 .saldo(conta.getSaldo())
                 .build();
-        return KafkaOperacao;
     }
 }

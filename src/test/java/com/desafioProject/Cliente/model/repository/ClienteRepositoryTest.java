@@ -22,7 +22,7 @@ import static org.mockito.Mockito.when;
 @ActiveProfiles("test")
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
-public class ClienteRepositoryTest {
+class ClienteRepositoryTest {
 
     @MockBean
     TestEntityManager testEntityManager;
@@ -32,7 +32,7 @@ public class ClienteRepositoryTest {
 
     @Test
     @DisplayName("Deve retornar verdadeiro quando existir um cliente na base com o cnpj informado")
-    public void retornaVerdadeiroSeClienteExistirTest() {
+    void retornaVerdadeiroSeClienteExistirTest() {
         String cnpj = "70.794.651/0001-86";
         Cliente cliente = ClienteBuilder.clienteCnpj().criar();
         testEntityManager.persist(cliente);
@@ -45,7 +45,7 @@ public class ClienteRepositoryTest {
 
     @Test
     @DisplayName("Deve obter um cliente por cpf")
-    public void encontrarClienteByCpfTest() {
+    void encontrarClienteByCpfTest() {
         ClienteDto clienteDto = ClienteDtoBuilder.criarClienteDto().criar();
         Cliente cliente = ClienteBuilder.clienteCpf().criar();
 
@@ -58,7 +58,7 @@ public class ClienteRepositoryTest {
 
     @Test
     @DisplayName("Devem obter um cliente pelo cnpj")
-    public void encontrarClienteByCnpjTest() {
+    void encontrarClienteByCnpjTest() {
         ClienteDto clienteDto = ClienteDtoBuilder.criarClienteDto().criar();
         Cliente cliente = ClienteBuilder.clienteCompleto().criar();
 
@@ -74,7 +74,7 @@ public class ClienteRepositoryTest {
 
     @Test
     @DisplayName("Deve retornar verdadeiro quando não existir um cliente na base com o cnpj informado")
-    public void retornaFalsoSeClienteNaoExistirTest() {
+    void retornaFalsoSeClienteNaoExistirTest() {
         Cliente cliente = ClienteBuilder.clienteCnpj().criar();
         testEntityManager.persist(cliente);
 
@@ -85,7 +85,7 @@ public class ClienteRepositoryTest {
 
     @Test
     @DisplayName("Deve criar um cliente")
-    public void criarClienteTest() {
+    void criarClienteTest() {
         Cliente cliente = ClienteBuilder.clienteCnpj().criar();
 
         when(repository.save(cliente)).thenReturn(cliente);
@@ -96,7 +96,7 @@ public class ClienteRepositoryTest {
 
     @Test
     @DisplayName("Deve deletar um cliente e persistir se o mesmo foi deletado")
-    public void deleteClienteEPersistirSeFoiDeletadoTest() {
+    void deleteClienteEPersistirSeFoiDeletadoTest() {
         Cliente cliente = ClienteBuilder.clienteCnpj().criar();
 
         repository.save(cliente);
